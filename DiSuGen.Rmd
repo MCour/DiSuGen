@@ -1,10 +1,12 @@
 ---
 title: "DiSuGen: Disease Subtyping with integrated Genetic association"
 date: "28 juin 2018"
-output: html_document
+output:
+  md_document:
+    variant: markdown_github
 ---
 
-[comment]: <> (author: "Marie Courbariaux, Christophe Ambroise, Cyril Dalmasso, Marie Szafranski, the Memodeep Consortium")
+[comment]: <> (author: "Marie Courbariaux, Christophe Ambroise, Cyril Dalmasso, Marie Szafranski, the Memodeep Consortium", output: html_document)
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -187,7 +189,7 @@ load("parameters.RData", verbose = TRUE)
 * ```SIGMAK[clustering variable,cluster]```: polynomial regression variance parameters,
 * ```W[concomitant variable,cluster]```: logistic regression parameters.
 
-**(Intermediary) simulated data: **
+**(Intermediary) simulated data:**
 
 * ```TPS[patient,cluster]```: simulated visit times.
 * ```G[patient,concomitant variable]```: simulated concomitant variables. The first one is the intercept. The others are simulated from a binomial law of parameter 0.5.
