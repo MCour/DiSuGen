@@ -31,7 +31,7 @@ a suitable model selection and a correction of the bias resulting from the penal
 in the logistic regression.
 
 <div style="width:300px; height:300px">
-![](README_files/figure-markdown_github/disugen2.png)
+![](README_files/figure-markdown_github/DiSuGen2.png)
 </div>
 
 \

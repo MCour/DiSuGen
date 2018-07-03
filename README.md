@@ -5,7 +5,7 @@ The `DiSuGen` R tool is designed to subtype diseases from both (longitudinal or 
 
 At the heart of this tool is the `FlexMix` R package \[1\], to which has been added a driver that selects the covariates using the `glmnet` R package \[2\], as well as a coating that allows the use of functional or longitudinal data, a suitable model selection and a correction of the bias resulting from the penalty in the logistic regression.
 
-![](README_files/figure-markdown_github/disugen2.png)
+![](README_files/figure-markdown_github/DiSuGen2.png)
 
 More information about `DiSuGen` can be found in the following working paper:
 
