@@ -190,7 +190,7 @@ load("parameters.RData", verbose = TRUE)
 -   `SIGMAK[clustering variable,cluster]`: polynomial regression variance parameters,
 -   `W[concomitant variable,cluster]`: logistic regression parameters.
 
-**(Intermediary) simulated data: **
+**(Intermediary) simulated data:**
 
 -   `TPS[patient,cluster]`: simulated visit times.
 -   `G[patient,concomitant variable]`: simulated concomitant variables. The first one is the intercept. The others are simulated from a binomial law of parameter 0.5. In the working paper, in the simulation study, `G` is a real genotyped dataset.
