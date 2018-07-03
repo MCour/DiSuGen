@@ -31,7 +31,7 @@ a suitable model selection and a correction of the bias resulting from the penal
 in the logistic regression.
 
 <div style="width:300px; height:300px">
-![](http://www.math-evry.cnrs.fr/_media/members/mcourbariaux/disugen2.png)
+![](README_files/figure-markdown_github/disugen2.png)
 </div>
 
 \
@@ -316,6 +316,13 @@ function.
 print(paste("ARI for the 2-step method:",QUALcl[1]))
 print(paste("ARI for the integrative method:",QUALcl[2]))
 ```
+
+## Acknowledgements and funding
+
+This work was carried out within the 
+MeMoDeep (Methods and Models for Deep Screening of subphenotypes
+in Parkinson’s Disease) project funded by the ANR. 
+
 
 
 ## References

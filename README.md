@@ -5,7 +5,7 @@ The `DiSuGen` R tool is designed to subtype diseases from both (longitudinal or 
 
 At the heart of this tool is the `FlexMix` R package \[1\], to which has been added a driver that selects the covariates using the `glmnet` R package \[2\], as well as a coating that allows the use of functional or longitudinal data, a suitable model selection and a correction of the bias resulting from the penalty in the logistic regression.
 
-![](http://www.math-evry.cnrs.fr/_media/members/mcourbariaux/disugen2.png)
+![](README_files/figure-markdown_github/disugen2.png)
 
 More information about `DiSuGen` can be found in the following working paper:
 
@@ -139,7 +139,7 @@ clinvar <- clin[2] # choice of the clinical variable to be plotted
 plotclustclin(plotclin=clinvar,datmix=datmix,clin=clin,resflex=RESclust1$resflexmix)
 ```
 
-![](DiSuGen_files/figure-markdown_github/plotclin-1.png)
+![](README_files/figure-markdown_github/plotclin-1.png)
 
 Plot of the logistic regression parameters:
 
@@ -148,7 +148,7 @@ k <- 2 # choice of the cluster according to which the selected covariables are o
 plotclustgenet(plotgenet=k,resflex=RESclust1$resflexmix,reslogitW = RESclust1$reslogit$West2)
 ```
 
-![](DiSuGen_files/figure-markdown_github/plotgenet-1.png)
+![](README_files/figure-markdown_github/plotgenet-1.png)
 
 Checking the inference results
 ------------------------------
@@ -190,7 +190,7 @@ load("parameters.RData", verbose = TRUE)
 -   `SIGMAK[clustering variable,cluster]`: polynomial regression variance parameters,
 -   `W[concomitant variable,cluster]`: logistic regression parameters.
 
-**(Intermediary) simulated data: **
+\*\*(Intermediary) simulated <data:**>
 
 -   `TPS[patient,cluster]`: simulated visit times.
 -   `G[patient,concomitant variable]`: simulated concomitant variables. The first one is the intercept. The others are simulated from a binomial law of parameter 0.5. In the working paper, in the simulation study, `G` is a real genotyped dataset.
@@ -200,7 +200,7 @@ load("parameters.RData", verbose = TRUE)
 -   `SIGMA2[clustering variable,patient]`: variance of clustering variables (computed from `Z` and `SIGMA2K`).
 -   `Y[clustering variable,patient,visit]`: clustering variables values (simulated from `MU` and `SIGMA2`).
 
-They can be compared with the estimated parameters: ![](DiSuGen_files/figure-markdown_github/param2-1.png)![](DiSuGen_files/figure-markdown_github/param2-2.png)
+They can be compared with the estimated parameters: ![](README_files/figure-markdown_github/param2-1.png)![](README_files/figure-markdown_github/param2-2.png)
 
 Clustering ability
 ------------------
@@ -210,6 +210,11 @@ The obtained partitions can be compared to the simulated one with the Adjusted R
     ## [1] "ARI for the 2-step method: 0.557730352797792"
 
     ## [1] "ARI for the integrative method: 0.673009634280784"
+
+Acknowledgements and funding
+----------------------------
+
+This work was carried out within the MeMoDeep (Methods and Models for Deep Screening of subphenotypes in Parkinson’s Disease) project funded by the ANR.
 
 References
 ----------
