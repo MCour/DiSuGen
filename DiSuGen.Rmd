@@ -1,0 +1,329 @@
+---
+title: "DiSuGen: Disease Subtyping with integrated Genetic association"
+date: "28 juin 2018"
+output: html_document
+---
+
+[comment]: <> (author: "Marie Courbariaux, Christophe Ambroise, Cyril Dalmasso, Marie Szafranski, the Memodeep Consortium")
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Description
+
+The ```DiSuGen``` R tool is designed to subtype diseases from both 
+(longitudinal or functional) clinical follow-up data 
+and (large size) genotyping data. 
+```DiSuGen``` performs a clustering of individuals (the patients) from both 
+functional or longitudinal (clinical) variables and a large number of (genotyping) covariables 
+via a mixture of regressions model, with logistic weights function of the covariables. 
+The (genetic) covariables that may not be relevant for clustering are discarded 
+by maximizing a penalized likelihood via a (Classification) Expectation Maximization (CEM) algorithm. 
+
+At the heart of this tool is the ```FlexMix``` R package [1], 
+to which has been added a driver that selects the covariates 
+using the ```glmnet``` R package [2], 
+as well as a coating that allows the use of functional or longitudinal data, 
+a suitable model selection and a correction of the bias resulting from the penalty 
+in the logistic regression.
+
+<div style="width:300px; height:300px">
+![](http://www.math-evry.cnrs.fr/_media/members/mcourbariaux/disugen2.png)
+</div>
+
+\
+
+More information about ```DiSuGen``` can be found in the following working paper:
+
+Marie Courbariaux, Christophe Ambroise, Cyril Dalmasso, Marie Szafranski, Memodeep Consortium. *A mixture model with logistic weights for disease subtyping with integrated genome association study*. 2018. 〈[hal-01822237](https://hal.archives-ouvertes.fr/hal-01822237)〉
+
+
+# Example of use on a simulated data set
+
+## Simulated data set and required data format
+
+For illustration purpose, we use the following simulated data set:
+
+```{r load, echo=TRUE}
+load("dataset.RData", verbose = TRUE)
+```
+
+```datmix``` is the data in the required format: 
+
+```{r head, echo=TRUE}
+head(datmix[,1:10])
+```
+where:
+
+* ```PATIENT``` are the patient ids,
+* ```visit``` are the visit numbers,
+* ```time``` are the visit times,
+* ```var1, var2, var3,...```  are the (clinical) clustering variables, listed in ```clin```, 
+* ```Intercept, SNP1, SNP2,...``` are the intercept and concomitant (genetic) (here, binary) variables, listed in ```xnam```.
+
+
+## Required functions
+
+The required libraries are the following:
+```{r libraries, echo=TRUE,message = FALSE}
+library(flexmix)
+library(nnet)
+library(glmnet)
+```
+
+And the clustering functions of ```DiSuGen``` are the following:
+```{r functions, echo=TRUE}
+source("F_FLXPmultiLasso.R")
+source("F_assoclog.R")
+source("F_DiSuGen.R")
+```
+
+
+## Calling the main function of DiSuGen
+
+```{r DiSuGen, echo=TRUE,eval=F}
+RESclust1 <- DiSuGen(
+  datmix=datmix,
+  fams=NA,
+  long=NA,
+  clin=clin,
+  xnam=xnam,
+  Kmax=3,
+  nPR=1,
+  bingenet=T,
+  KKmax=T,
+  Lassosel=T,
+  nrep=50,
+  itermax=250,
+  Constr1=T,
+  EMtype="hard"
+)
+```
+
+```{r RESclust, echo=FALSE}
+load("RESclust.RData")
+RESclust1 <- RESclust[[2]]
+RESclust2 <- RESclust[[1]]
+```
+
+This function performs a clustering on the ```datmix``` data,
+on variables listed in ```clin```, 
+
+* if ```bingenet=T```, with logistic weights depending on the covariables listed in ```xnam```; if ```bingenet=F```, with constant weights, 
+* with ```nPR``` polynomial components to decompose the longitudinal signals,
+* with ```Kmax``` clusters if ```KKmax=T```; with ```Kmax``` clusters at most if ```KKmax=F```.
+
+
+Its other parameters are the following:
+
+* ```Lassosel```: choose ```TRUE``` if a Lasso selection should be performed on the covariables,
+* ```Constr1```: choose ```TRUE``` if an identifiability constraint should be respected in the logistic regression (i.e. weights relative to cluster 1 all set to ```0```),
+* ```EMtype```: choose ```hard``` for a CEM, ```weighted``` for an EM (flexmix ```classify``` option),
+* ```fams```: family of each variable in ```clin``` (```gaussian```, ```binomial``` or ```poisson```, default to ```gaussian```),
+* ```long```: vector indicating for each variable of ```clin``` wether the variable is longitudinal (i.e. with several visits with non-missing values) (default to ```TRUE```).
+
+
+
+Its outputs are the following:
+
+* ```resflexmix```: ```flexmix``` output (see the ```FlexMix``` package),
+* ```clustres```is a summary of clustering results: probability of belonging to each cluster for each patient,
+* ```BICmin``` is the minimal BIC value that was got (among all visited cluster numbers and 
+initializations),
+* ```reslogit```: results from the logistic regression. It contains  ```West2``` (the final logistic weights),```PVALS``` (the p-values when testing the nullity of those parameters),```SDmat``` (the standard deviations used to compute the p-values, got 
+from the Fisher Information Matrix) and ```snpnn``` (the list of the selected covariables).
+
+One can alternatively first perform a clustering on the clinical data 
+and then perform a logistic regression (2-step method) as follows:
+
+```{r DiSuGen2, echo=TRUE,eval=F}
+RESclust2 <- DiSuGen(
+  datmix=datmix,
+  clin=clin,
+  xnam=xnam,
+  bingenet=F
+)
+```
+
+
+## Visualization of the results
+
+Load the plotting functions of ```DiSuGen```:
+```{r plots, echo=TRUE}
+source("F_plotclust.R")
+```
+
+Plot the clustering results:
+```{r plotclin, echo=TRUE}
+clinvar <- clin[2] # choice of the clinical variable to be plotted
+plotclustclin(plotclin=clinvar,datmix=datmix,clin=clin,resflex=RESclust1$resflexmix)
+```
+
+Plot of the logistic regression parameters:
+```{r plotgenet, echo=TRUE}
+k <- 2 # choice of the cluster according to which the selected covariables are ordered
+plotclustgenet(plotgenet=k,resflex=RESclust1$resflexmix,reslogitW = RESclust1$reslogit$West2)
+```
+
+## Checking the inference results
+
+The parameters used for data simulation and intermediary simulation data can be found here:
+```{r param, echo=TRUE}
+load("parameters.RData", verbose = TRUE)
+```
+
+
+
+**Simulation parameters:**
+
+* ```I```: number of individuals (patients),
+* ```J```: number of concomitant (genetic) binary variables,
+* ```V```: number of clustering (clinical) variables,
+* ```nPR```: degree of the polynomial regressions,
+* ```Tmax```: number of visit per patient,
+* ```K```: number of clusters,
+* ```ALPHA[clustering variable,polynomial degree,cluster]```: polynomial regression parameters,
+* ```SIGMAK[clustering variable,cluster]```: polynomial regression variance parameters,
+* ```W[concomitant variable,cluster]```: logistic regression parameters.
+
+**(Intermediary) simulated data: **
+
+* ```TPS[patient,cluster]```: simulated visit times.
+* ```G[patient,concomitant variable]```: simulated concomitant variables. The first one is the intercept. The others are simulated from a binomial law of parameter 0.5.
+In the working paper, in the simulation study, ```G``` is a real genotyped dataset.
+* ```PI[patient,cluster]```: probability of each patient to belong to each cluster (computed from ```W``` and ```G```).
+* ```Z[patient,cluster]```: belonging of each patient to each cluster (simulated from ```PI```).
+* ```MU[clustering variable,patient,visit]```: mean of clustering variables (computed from ```Z```, ```TPS``` and ```ALPHA```).
+* ```SIGMA2[clustering variable,patient]```: variance of clustering variables (computed from ```Z``` and ```SIGMA2K```).
+* ```Y[clustering variable,patient,visit]```: clustering variables values (simulated from ```MU``` and ```SIGMA2```).
+
+They can be compared with the estimated parameters:
+```{r param2, echo=FALSE,message=F}
+library(mclust)
+library(combinat)
+
+# rbind(ALPHA[2,,],SIGMA2K[2,])
+# rbind(ALPHA[1,,],SIGMA2K[1,])
+# parameters(RESclust1$resflexmix)
+# parameters(RESclust2$resflexmix)
+
+RESclust <- list()
+RESclust[[1]] <- RESclust2
+RESclust[[2]] <- RESclust1
+
+Na <- 2 # number of estimation strategies to be compared
+ALPHAestini <- array(data=NA,dim=c(V,nPR+1,K,Na)) # estimated alpha parameters before class permutation
+ALPHAest <- array(data=NA,dim=c(V,nPR+1,K,Na)) # estimated alpha parameters
+SIGMA2estini <- array(data=NA,c(V,K,Na)) # estimated sigma parameters before class permutation
+SIGMA2est <- array(data=NA,c(V,K,Na)) # estimated sigma parameters
+West <- array(data=NA,c(J,K,Na)) # estimated omega parameters
+SNPsel <- array(data=NA,c(J,Na)) # selected SNPs (at least one non-zero omega parameter)
+QUALcl <- numeric(Na) # adjusted rand indexes (to evaluate the clustering quality)
+for(a in 1:Na){
+  resclusta <- RESclust[[a]]
+  resflex <- resclusta$resflexmix
+  clustres <- resclusta$clustres
+  classattr <- apply(clustres,1,function(x){which.max(x)})
+  classtrue <- apply(Z,1,function(x){which.max(x)})
+  QUALcl[a] <- adjustedRandIndex(classattr,classtrue)
+  for(k in 1:K){
+    rescl <- with(resflex@components,get(paste0("Comp.",k)))
+    for(v in 1:V){
+      ALPHAestini[v,,k,a] <- rescl[[v]]@parameters$coef
+      SIGMA2estini[v,k,a] <- rescl[[v]]@parameters$sigma^2
+    }
+  }
+  calserr <- function(kcorK){
+    serr <- 0
+    for(k in 1:K){
+      serr <-  serr + sum((ALPHAestini[,,kcorK[k],a]-ALPHA[,,k])^2)+
+        sum((SIGMA2estini[,kcorK[k],a]-SIGMA2K[,k])^2)
+    }
+    return(serr)
+  }
+  perdet <- permn(1:K)[[which.min(unlist(permn(1:K,fun=calserr)))]]
+  for(k in 1:K){
+    ALPHAest[,,k,a] <- ALPHAestini[,,perdet[k],a]
+    SIGMA2est[,k,a] <- SIGMA2estini[,perdet[k],a]
+    # West[,k,a] <- resflex@concomitant@coef[,perdet[k]]
+    West[,k,a] <- resclusta$reslogit$West2[,perdet[k]]
+  }
+  SNPsel[,a] <- 1*(rowSums(abs(resflex@concomitant@coef))>0)
+}
+
+E <- Na+1
+v <- 0
+v <- v+1 # Clustering variable selection
+par(mfrow=c(1,nPR+2),mar=c(3,3,0.5,0.5),mgp=c(2,1,0))
+for(npoly in 1:(nPR+1)){
+  if(npoly==1){
+    ylimleg <- range(cbind(ALPHA[v,npoly,],ALPHAest[v,npoly,,]),na.rm=T) + c(0,0.3)
+  }else{
+    ylimleg <- range(cbind(ALPHA[v,npoly,],ALPHAest[v,npoly,,]),na.rm=T)
+  }
+  matplot((ALPHAest[v,npoly,,]),xaxt="n", col=1, ylim=ylimleg,ylab=NA)
+  axis(side = 1,at=(1:K),labels=parse(text=paste0("alpha[list(",v,",",npoly-1,",",1:K,")]")))
+  points(ALPHA[v,npoly,],col=2:(K+1),pch="+",cex=3,x=(1:K))
+  if(npoly==1){
+    legend(x="topleft",pch=c("+",1,2),
+           col=rep(1,Na+1),
+           legend=c("true parameters","2-step method estimates","integrative method estimates"),
+           bty="n",pt.cex=c(3,1,1))
+  }
+}
+matplot((SIGMA2est[v,,]),xaxt="n",
+          ylim=range(cbind(SIGMA2K[v,],SIGMA2est[v,,]),na.rm=T),col=1,ylab=NA)
+points(SIGMA2K[v,],col=2:(K+1),pch="+",cex=3, x=(1:K))
+axis(side = 1,at=(1:K),labels=parse(text=paste0("sigma[list(",v,",",1:K,")]")))
+
+
+par(mfcol=c(1,1),mar=c(3,3,0.5,0.5),mgp=c(2,1,0))
+SNPact <- c((rowSums(abs(W),na.rm=T)>0)*1)
+a <- 2
+West[,,2] <- West[,,a]-West[,1,a] # To get identifiability, W1==0
+ylabexp <- expression(paste(omega," estimates"))
+matplot(y=West[SNPact==1,,a],xaxt="n",col=c(NA,3:(K+1)),
+     ylim=range(list(West[SNPact==1,2:K,a],W),na.rm=T),ylab=ylabexp,xlab=NA)
+for(k in 2:K){
+  points((W[SNPact==1,k]),col=k+1,pch=k,cex=2,lwd=2)
+}
+axis(1,at=1:length(which(SNPact==1)),parse(text=paste0("omega[list(",which(SNPact==1),")]")))
+legend("topright",legend=c("True values:",paste("class",2:K)),
+       pch=c(NA,as.numeric(2:K)),col=c(NA,3:(K+1)),bty="n")
+legend("topright",legend=c(NA,rep(NA,K-1),"Estimates:   ",paste("class",2:K)),
+       pch=c(NA,rep(NA,K-1),NA,as.character(2:K)),col=c(NA,3:(K+1),NA,3:(K+1)),bty="n")
+
+```
+
+## Clustering ability
+
+The obtained partitions can be compared to the simulated 
+one with the Adjusted Rand Index (ARI).
+It can for instance be computed with the ```mclust::adjustedRandIndex``` 
+function.
+
+```{r ARI, echo=FALSE}
+# QUALcl <- numeric(2)
+# classtrue <- apply(Z,1,function(x){which.max(x)})
+# classattr1 <- apply(RESclust1$clustres,1,function(x){which.max(x)})
+# QUALcl[2] <- adjustedRandIndex(classattr1,classtrue)
+# classattr2 <- apply(RESclust2$clustres,1,function(x){which.max(x)})
+# QUALcl[1] <- adjustedRandIndex(classattr2,classtrue)
+
+print(paste("ARI for the 2-step method:",QUALcl[1]))
+print(paste("ARI for the integrative method:",QUALcl[2]))
+```
+
+
+## References
+
+**Working paper**: 
+
+Marie Courbariaux, Christophe Ambroise, Cyril Dalmasso, Marie Szafranski, the Memodeep Consortium. *A mixture model with logistic weights for disease subtyping with integrated genome association study*. 2018. 〈[hal-01822237](https://hal.archives-ouvertes.fr/hal-01822237)〉
+
+**Sources**:
+
+[1] Bettina Gruen and Friedrich Leisch. *FlexMix Version 2: Finite mixtures with concomitant variables and varying and constant parameters* Journal of Statistical Software, 28(4), 1-35, 2008. <[doi:10.18637/jss.v028.i04](http://www.jstatsoft.org/v28/i04/)>
+
+[2] Jerome Friedman, Trevor Hastie, Robert Tibshirani (2010). *Regularization Paths for Generalized Linear Models via Coordinate Descent*. Journal of Statistical Software, 33(1), 1-22. URL [http://www.jstatsoft.org/v33/i01/](http://www.jstatsoft.org/v33/i01/).
