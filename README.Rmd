@@ -1,12 +1,12 @@
 ---
 title: "DiSuGen: Disease Subtyping with integrated Genetic association"
+# author: "Marie Courbariaux, Christophe Ambroise, Cyril Dalmasso, Marie Szafranski, the Memodeep Consortium"
 date: "28 juin 2018"
-output:
+output: 
+# html_document
   md_document:
     variant: markdown_github
 ---
-
-[comment]: <> (author: "Marie Courbariaux, Christophe Ambroise, Cyril Dalmasso, Marie Szafranski, the Memodeep Consortium", output: html_document)
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -159,14 +159,15 @@ source("F_plotclust.R")
 Plot the clustering results:
 ```{r plotclin, echo=TRUE}
 clinvar <- clin[2] # choice of the clinical variable to be plotted
-plotclustclin(plotclin=clinvar,datmix=datmix,clin=clin,resflex=RESclust1$resflexmix)
+plotclustclin(clinvar=clinvar,datmix=datmix,clin=clin,resflex=RESclust1$resflexmix)
 ```
 
 Plot of the logistic regression parameters:
 ```{r plotgenet, echo=TRUE}
-k <- 2 # choice of the cluster according to which the selected covariables are ordered
-plotclustgenet(plotgenet=k,resflex=RESclust1$resflexmix,reslogitW = RESclust1$reslogit$West2)
+plotgenet <- 3 # choice of the cluster according to which the selected covariables are ordered
+plotclustgenet(plotgenet=plotgenet,RESclust=RESclust1)
 ```
+
 
 ## Checking the inference results
 

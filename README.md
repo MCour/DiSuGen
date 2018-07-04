@@ -136,7 +136,7 @@ Plot the clustering results:
 
 ``` r
 clinvar <- clin[2] # choice of the clinical variable to be plotted
-plotclustclin(plotclin=clinvar,datmix=datmix,clin=clin,resflex=RESclust1$resflexmix)
+plotclustclin(clinvar=clinvar,datmix=datmix,clin=clin,resflex=RESclust1$resflexmix)
 ```
 
 ![](README_files/figure-markdown_github/plotclin-1.png)
@@ -144,8 +144,8 @@ plotclustclin(plotclin=clinvar,datmix=datmix,clin=clin,resflex=RESclust1$resflex
 Plot of the logistic regression parameters:
 
 ``` r
-k <- 2 # choice of the cluster according to which the selected covariables are ordered
-plotclustgenet(plotgenet=k,resflex=RESclust1$resflexmix,reslogitW = RESclust1$reslogit$West2)
+plotgenet <- 3 # choice of the cluster according to which the selected covariables are ordered
+plotclustgenet(plotgenet=plotgenet,RESclust=RESclust1)
 ```
 
 ![](README_files/figure-markdown_github/plotgenet-1.png)
